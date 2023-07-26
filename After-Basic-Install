@@ -1,0 +1,180 @@
+Enable contrib and non-free sources
+
+Edit /etc/apt/sources.list and append non-free contrib to each line
+
+deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware 
+deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware
+
+deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+
+Enable bookworm backports
+
+Edit /etc/apt/sources.list and insert the following lines to the end of the file
+
+# bookworm-backports
+deb http://deb.debian.org/debian bookworm-backports main contrib non-free
+deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free
+
+Enable Flatpak support
+
+sudo apt install flatpak
+
+sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+Changes will take effect after logging out or rebooting the system
+
+Example usage flatpak install <application name>
+
+KDE Plasma flatpak support
+
+sudo apt install plasma-discover-backend-flatpak
+
+Gnome Software flatpak support
+
+sudo apt install gnome-software-plugin-flatpak
+
+Manually install latest Firefox version into /opt
+
+Download latest Firefox tarball from Mozilla (update link for your language) and extract it into /opt sudo wget -O /tmp/firefox-latest.tar.bz2 'https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-GB' && sudo tar -C /opt -xvjf /tmp/firefox-latest.tar.bz2
+
+Create firefox.desktop file in /usr/share/applications
+
+sudo nano /usr/local/share/applications/firefox.desktop
+
+[Desktop Entry]
+Name=Firefox Stable
+Comment=Web Browser
+Exec=/opt/firefox/firefox %u
+Terminal=false
+Type=Application
+Icon=/opt/firefox/browser/chrome/icons/default/default128.png
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml+xml;application/xml;application/vnd.mozilla.xul+xml;application/rss+xml;application/rdf+xml;image/gif;image/j>
+StartupNotify=true
+Actions=Private;
+
+[Desktop Action Private]
+Exec=/opt/firefox/firefox --private-window %u
+Name=Open in private mode
+
+To use Firefox with Wayland you can either change the Exec lines to include the MOZ_ENABLE_WAYLAND=1 environment variable
+
+Exec=env MOZ_ENABLE_WAYLAND=1 /opt/firefox/firefox %u
+
+Exec=env MOZ_ENABLE_WAYLAND=1 /opt/firefox/firefox --private-window %u
+
+Or set the environment in /etc/environment
+
+sudo nano /etc/environment MOZ_ENABLE_WAYLAND=1
+
+Create symlink from the Firefox executable in /opt/firefox/firefox to /usr/local/bin/firefox to run Firefox from terminal sudo ln -s /opt/firefox/firefox /usr/local/bin/firefox
+
+Script to update Firefox
+
+#! /bin/bash
+sudo wget -O /tmp/firefox-latest.tar.bz2 'https://download.mozilla.org/?product=firefox-latest-ssl&os=linux64&lang=en-GB' &&
+sudo rm -R /opt/firefox &&
+sudo tar -C /opt -xvjf /tmp/firefox-latest.tar.bz2
+
+Remove firefox-esr (optional, don't autoremove any Firefox dependencies)
+
+sudo apt remove firefox-esr
+
+Alternatively you can install the latest version of Firefox as a Flatpak.
+
+Enable pipewire (Plasma only, pipewire is already the default audio server in Gnome desktop)
+
+Install required packages
+
+sudo apt install libspa-0.2-bluetooth wireplumber pipewire-media-session-
+
+Enable WirePlumber in "systemd" (running as user, not as root)
+
+systemctl --user --now enable wireplumber.service
+
+Changes will take effect after rebooting the system
+
+Install and configure KVM / virt-manager
+
+Install required packages
+
+sudo apt install qemu-system libvirt-daemon-system virt-manager
+
+Edit the libvirtd configuration
+
+sudo nano /etc/libvirt/libvirtd.conf
+
+Set the domain socket group ownership to libvirt
+
+unix_sock_group = "libvirt"
+
+Adjust the UNIX socket permissions for the R/W socket
+
+unix_sock_rw_perms = "0770"
+
+Start and enable the libvirtd service
+
+sudo systemctl start libvirtd
+
+sudo systemctl enable libvirtd
+
+Add user to libvirt group
+
+sudo usermod -a -G libvirt $(whoami)
+
+Start "default" network and enable autostart
+
+sudo virsh net-start default
+
+sudo virsh net-autostart --network default
+
+
+Remove pre-installed Gnome games (Gnome desktop only)
+
+sudo apt purge iagno lightsoff four-in-a-row gnome-robots pegsolitaire gnome-2048 hitori gnome-klotski gnome-mines gnome-mahjongg gnome-sudoku quadrapassel swell-foop gnome-tetravex gnome-taquin aisleriot gnome-chess five-or-more gnome-nibbles tali ; sudo apt autoremove
+Fix broken QT application theming in Gnome
+
+sudo apt install qt5-style-plugins
+
+echo "export QT_QPA_PLATFORMTHEME=gtk2" >> ~/.profile
+
+Changes will take effect after logging out or rebooting the system
+Disable suspend / hibernation
+
+Create new directory /etc/systemd/sleep.conf.d
+
+sudo mkdir /etc/systemd/sleep.conf.d
+
+Create a nosuspend.conf file as
+
+sudo nano /etc/systemd/sleep.conf.d/nosuspend.conf
+
+[Sleep]
+AllowSuspend=no
+AllowHibernation=no
+AllowSuspendThenHibernate=no
+AllowHybridSleep=no
+
+To only prevent suspending when the laptop lid is closed set the following options in /etc/systemd/logind.conf
+
+sudo nano /etc/systemd/logind.conf
+
+[Login]
+HandleLidSwitch=ignore
+HandleLidSwitchDocked=ignore
+
+Fix slow shutdown
+
+The default time-out for a stop job is 90s. This is excessively long.
+
+The time can be changed by editing the /etc/systemd/system.conf
+
+sudo nano /etc/systemd/system.conf
+
+Uncomment the DefaultTimeoutStopSec line and change from 90s to 15s
+
+DefaultTimeoutStopSec=15s
