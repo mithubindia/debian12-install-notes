@@ -1,0 +1,1 @@
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/mithubindia/debian12-install-notes?utm_source=oss&utm_medium=github&utm_campaign=mithubindia%2Fdebian12-install-notes&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
